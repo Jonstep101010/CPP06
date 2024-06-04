@@ -1,4 +1,5 @@
 #include "ScalarConverter.hpp"
+#include <cstdlib>
 #include <iostream>
 
 /*
@@ -37,6 +38,7 @@ enum Type {
 	INT,
 	FLOAT,
 	DOUBLE,
+	ERR,
 };
 
 struct Converter {
@@ -67,36 +69,136 @@ static bool contains_chars(std::string const& literal) {
 	return false;
 }
 
-// static void from_char(std::string const& literal);
-// static void from_int(std::string const& literal);
-// static void from_float(std::string const& literal);
-// static void from_double(std::string const& literal);
+// @audit type conversion must be solved using one specific type of casting.
+static void from_char(std::string const& literal) {
+	const char input = static_cast<char>(literal[0]);
+
+	if (std::isprint(input)) {
+		std::cout << "char: '" << input << "' (source)\n";
+	} else {
+		std::cout << "char: Non displayable\n";
+	}
+
+	std::cout << "int: " << static_cast<int>(input) << "\n";
+	std::cout << "float: " << static_cast<float>(input)
+			  << ".0f\n";
+	std::cout << "double: " << static_cast<double>(input)
+			  << ".0\n";
+}
+
+static void from_int(std::string const& literal) {
+	const int input = std::atoi(literal.c_str());
+
+	if (std::isprint(input)) {
+		std::cout << "char: '" << static_cast<char>(input)
+				  << "'\n";
+	} else {
+		std::cout << "char: Non displayable\n";
+	}
+
+	std::cout << "int: " << input << " (source)\n";
+	std::cout << "float: " << static_cast<float>(input)
+			  << ".0f\n";
+	std::cout << "double: " << static_cast<double>(input)
+			  << ".0\n";
+}
+
+static void from_float(std::string const& literal) {
+	const float input
+		= static_cast<float>(std::atof(literal.c_str()));
+
+	if (is_pseudo_float(literal)) {
+		std::cout << "char: impossible\n";
+		std::cout << "int: impossible\n";
+		std::cout << "float: " << input << "f (source)\n";
+		std::cout << "double: " << static_cast<double>(input)
+				  << "\n";
+	} else {
+		const int scalar_int
+			= static_cast<int>(std::atoi(literal.c_str()));
+		const char scalar_char = static_cast<char>(input);
+		if (std::isprint(scalar_char) != 0) {
+			std::cout << "char: '" << scalar_char << "'\n";
+		} else {
+			std::cout << "char: Non displayable\n";
+		}
+
+		std::cout << "int: " << scalar_int << std::endl;
+		if (static_cast<float>(scalar_int) == input) {
+			std::cout << "float: " << input << ".0f (source)\n";
+			std::cout << "double: " << static_cast<double>(input)
+					  << ".0\n";
+		} else {
+			std::cout << "float: " << input << "f (source)\n";
+			std::cout << "double: " << static_cast<double>(input)
+					  << "\n";
+		}
+	}
+}
+
+static void from_double(std::string const& literal) {
+	const double input
+		= static_cast<double>(std::atof(literal.c_str()));
+
+	if (is_pseudo_double(literal)) {
+		std::cout << "char: impossible\n";
+		std::cout << "int: impossible\n";
+		std::cout << "float: " << static_cast<float>(input)
+				  << "f \n";
+		std::cout << "double: " << input << " (source)\n";
+	} else {
+		const int scalar_int
+			= static_cast<int>(std::atoi(literal.c_str()));
+		const char scalar_char = static_cast<char>(input);
+		if (std::isprint(scalar_char)) {
+			std::cout << "char: '" << scalar_char << " '\n";
+		} else {
+			std::cout << "char: Non displayable\n";
+		}
+
+		std::cout << "int: " << scalar_int << "\n";
+		if (static_cast<double>(scalar_int) == input) {
+			std::cout << "float: " << static_cast<float>(input)
+					  << ".0f\n";
+			std::cout << "double: " << input << ".0 (source)\n";
+		} else {
+			std::cout << "float: " << static_cast<float>(input)
+					  << "f\n";
+			std::cout << "double: " << input << " (source)\n";
+		}
+	}
+}
+
+bool check_int(std::string const& literal) {
+	// std::cout << "int check for: " << literal << "\n";
+	if (literal.find_first_of(".f") != std::string::npos) {
+		return (false);
+	}
+	return true;
+}
 
 // @follow-up use function pointers like so:
 // typedef bool (*FuncPtr)(std::string const&);
 // FuncPtr from_type(...)
-static Type
-get_type(std::string const&
-			 literal) { // @follow-up needs additional checks
-	if (is_pseudo_double(literal)
-		|| is_pseudo_float(literal)) { // remove
-		std::cout << "pseudo literal\n";
-	}
-	if (literal.end()[-1] == 'f'
-		|| is_pseudo_float(literal)) { // @todo deeper checks
-		std::cout << "float\n";
+
+// @follow-up needs additional checks
+static Type get_type(std::string const& literal) {
+	// @todo deeper checks
+	if ((literal.end()[-1] == 'f' && literal.end()[-3] == '.'
+		 && std::isdigit(literal.end()[-2]))
+		|| is_pseudo_float(literal)) {
 		return (FLOAT);
 	}
 	if (literal.end()[-2] == '.' || is_pseudo_double(literal)) {
-		std::cout << "double\n";
 		return (DOUBLE);
 	}
 	if (literal.length() == 1 && std::iswalpha(literal[0])) {
-		std::cout << "char\n";
 		return (CHAR);
 	}
-	std::cout << "int\n";
-	return (INT);
+	if (check_int(literal)) {
+		return (INT);
+	}
+	return (ERR);
 }
 
 static void converter(std::string const& literal) {
@@ -105,16 +207,19 @@ static void converter(std::string const& literal) {
 	// @follow-up dispatch using function pointers
 	switch (self.type) {
 	case CHAR:
-		// from_char(literal);
+		from_char(literal);
 		break;
 	case INT:
-		// from_int(literal);
+		from_int(literal);
 		break;
 	case FLOAT:
-		// from_float(literal);
+		from_float(literal);
 		break;
 	case DOUBLE:
-		// from_double(literal);
+		from_double(literal);
+		break;
+	default:
+		std::cerr << "An error occurred. Terminating!\n";
 		break;
 	}
 
@@ -131,8 +236,9 @@ static void converter(std::string const& literal) {
 void ScalarConverter::convert(std::string const& literal) {
 	// @follow-up put in trash bin
 	// @todo build a type resolver
-	if (literal.length() == 1
-		|| (literal.length() > 1 && !contains_chars(literal))) {
+	if ((literal.length() == 1
+		 || (literal.length() > 1 && !contains_chars(literal)))
+		&& get_type(literal) != ERR) {
 		converter(literal);
 	} else {
 		std::cerr << "Error: invalid literal\n";
