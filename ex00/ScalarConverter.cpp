@@ -33,19 +33,6 @@ ScalarConverter::operator=(ScalarConverter const& rhs) {
 ** --------------------------------- METHODS ----------------------------------
 */
 
-enum Type {
-	CHAR,
-	INT,
-	FLOAT,
-	DOUBLE,
-	ERR,
-};
-
-struct Converter {
-	Type type;
-	// void (*convert)(std::string const& literal);
-};
-
 static bool is_pseudo_double(std::string const& literal) {
 	return literal == "nan" || literal == "-inf"
 		|| literal == "+inf";
@@ -87,7 +74,8 @@ static void from_char(std::string const& literal) {
 }
 
 static void from_int(std::string const& literal) {
-	const int input = std::atoi(literal.c_str());
+	const int input
+		= static_cast<int>(std::atoi(literal.c_str()));
 
 	if (std::isprint(input)) {
 		std::cout << "char: '" << static_cast<char>(input)
@@ -169,77 +157,41 @@ static void from_double(std::string const& literal) {
 	}
 }
 
-bool check_int(std::string const& literal) {
-	// std::cout << "int check for: " << literal << "\n";
-	if (literal.find_first_of(".f") != std::string::npos) {
-		return (false);
-	}
-	return true;
+typedef void (*FuncPtr)(std::string const&);
+
+void from_invalid(std::string const& literal) {
+	std::cerr << "Invalid input: " << literal << " !\n";
 }
 
-// @follow-up use function pointers like so:
-// typedef bool (*FuncPtr)(std::string const&);
-// FuncPtr from_type(...)
-
 // @follow-up needs additional checks
-static Type get_type(std::string const& literal) {
+static FuncPtr from_type(std::string const& literal) {
 	// @todo deeper checks
 	if ((literal.end()[-1] == 'f' && literal.end()[-3] == '.'
 		 && std::isdigit(literal.end()[-2]))
 		|| is_pseudo_float(literal)) {
-		return (FLOAT);
+		return (&from_float);
 	}
 	if (literal.end()[-2] == '.' || is_pseudo_double(literal)) {
-		return (DOUBLE);
+		return (&from_double);
 	}
 	if (literal.length() == 1 && std::iswalpha(literal[0])) {
-		return (CHAR);
+		return (&from_char);
 	}
-	if (check_int(literal)) {
-		return (INT);
+	if (literal.find_first_of(".f") == std::string::npos) {
+		return (&from_int);
 	}
-	return (ERR);
-}
-
-static void converter(std::string const& literal) {
-	Converter self = {.type = get_type(literal)};
-
-	// @follow-up dispatch using function pointers
-	switch (self.type) {
-	case CHAR:
-		from_char(literal);
-		break;
-	case INT:
-		from_int(literal);
-		break;
-	case FLOAT:
-		from_float(literal);
-		break;
-	case DOUBLE:
-		from_double(literal);
-		break;
-	default:
-		std::cerr << "An error occurred. Terminating!\n";
-		break;
-	}
-
-	// @follow-up handle non print characters
-	// @follow-up handle precision
-	// @follow-up handle int (0, -42, 42)
-	// @follow-up handle char ('a', 'b', 'c')
-	// @follow-up handle double (0.0, -4.2, 4.2)
-	// @follow-up handle float (0.0f, -4.2f, 4.2f)
-	// @follow-up handle pseudo literals -inff, +inff, +inf, nanf, -inf, nan
+	return (&from_invalid);
 }
 
 // @follow-up handle non print characters
+// @follow-up handle precision
+// @follow-up handle pseudo literals -inff, +inff, +inf, nanf, -inf, nan
+
 void ScalarConverter::convert(std::string const& literal) {
-	// @follow-up put in trash bin
-	// @todo build a type resolver
 	if ((literal.length() == 1
 		 || (literal.length() > 1 && !contains_chars(literal)))
-		&& get_type(literal) != ERR) {
-		converter(literal);
+		&& from_type(literal) != &from_invalid) {
+		from_type(literal)(literal);
 	} else {
 		std::cerr << "Error: invalid literal\n";
 	}
