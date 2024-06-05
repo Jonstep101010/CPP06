@@ -169,23 +169,22 @@ static FuncPtr from_type(std::string const& literal) {
 	const size_t idx_dot      = literal.find(".", 1);
 	const bool   is_pseudo_db = is_pseudo_double(literal);
 	const bool   is_pseudo_f  = is_pseudo_float(literal);
-	if (is_pseudo_db || is_pseudo_f
+	if (idx_dot != std::string::npos
+		&& static_cast<std::string>(&literal.at(idx_dot))
+				   .find(".", 1)
+			   != std::string::npos) {
+		return (&from_invalid);
+	}
+	if ((is_pseudo_db || is_pseudo_f)
 		|| idx_dot != std::string::npos) {
-		if (idx_dot != std::string::npos
-			&& static_cast<std::string>(
-				   (&literal.at(idx_dot)).str())
-					   .find(".", 1)
-				   != std::string::npos) {
-			return (&from_invalid);
-		}
-		if ((literal.end()[-1] == 'f'
-			 && std::isdigit(literal.end()[-2]))
-			|| is_pseudo_f) {
-			return (&from_float);
-		}
-		if (std::isdigit(literal.end()[-1]) || is_pseudo_db) {
-			return (&from_double);
-		}
+			if ((literal.end()[-1] == 'f'
+				&& std::isdigit(literal.end()[-2]))
+				|| is_pseudo_f) {
+				return (&from_float);
+			}
+			if (std::isdigit(literal.end()[-1]) || is_pseudo_db) {
+				return (&from_double);
+			}
 	} else if (idx_dot == std::string::npos) {
 		if (literal.length() == 1 && std::iswalpha(literal[0])) {
 			return (&from_char);
