@@ -4,12 +4,7 @@
 
 // randomly instanciates A, B or C and returns the instance as a Base pointer.
 Base* generate(void) {
-	// seed the random number generator
-
-	// generate a random number of variance 3
-
-	// std::srand(time(NULL));
-	switch (std::rand() / (RAND_MAX / 3) % 3) {
+	switch (std::rand() % 3) {
 	case 0:
 		return new A;
 	case 1:
