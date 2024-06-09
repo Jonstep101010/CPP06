@@ -1,6 +1,7 @@
 #include "ScalarConverter.hpp"
 #include <cstdlib>
 #include <iostream>
+#include <limits.h>
 
 /*
 ** ------------------------------- CONSTRUCTOR --------------------------------
@@ -74,21 +75,30 @@ static void from_char(std::string const& literal) {
 }
 
 static void from_int(std::string const& literal) {
-	const int input
-		= static_cast<int>(std::atoi(literal.c_str()));
+	const long wrap_input
+		= static_cast<long>(std::atol(literal.c_str()));
 
-	if (std::isprint(input)) {
-		std::cout << "char: '" << static_cast<char>(input)
-				  << "'\n";
+	if (wrap_input < INT_MAX && wrap_input > INT_MIN) {
+		const int input = static_cast<int>(wrap_input);
+		if (std::isprint(input)) {
+			std::cout << "char: '" << static_cast<char>(input)
+					  << "'\n";
+		} else {
+			std::cout << "char: Non displayable\n";
+		}
+		std::cout << "int: " << input << " (source)\n";
+		std::cout << "float: " << static_cast<float>(input)
+				  << ".0f\n";
+		std::cout << "double: " << static_cast<double>(input)
+				  << ".0\n";
 	} else {
-		std::cout << "char: Non displayable\n";
+		std::cout << "char: impossible\n";
+		std::cout << "int: impossible\n";
+		std::cout << "float: " << static_cast<float>(wrap_input)
+				  << ".0f\n";
+		std::cout << "double: "
+				  << static_cast<double>(wrap_input) << ".0\n";
 	}
-
-	std::cout << "int: " << input << " (source)\n";
-	std::cout << "float: " << static_cast<float>(input)
-			  << ".0f\n";
-	std::cout << "double: " << static_cast<double>(input)
-			  << ".0\n";
 }
 
 static void from_float(std::string const& literal) {
@@ -163,9 +173,7 @@ void from_invalid(std::string const& literal) {
 	std::cerr << "Invalid input: " << literal << " !\n";
 }
 
-// @follow-up needs additional checks
 static FuncPtr from_type(std::string const& literal) {
-	// @todo deeper checks
 	const size_t idx_dot      = literal.find(".", 1);
 	const bool   is_pseudo_db = is_pseudo_double(literal);
 	const bool   is_pseudo_f  = is_pseudo_float(literal);
@@ -177,14 +185,14 @@ static FuncPtr from_type(std::string const& literal) {
 	}
 	if ((is_pseudo_db || is_pseudo_f)
 		|| idx_dot != std::string::npos) {
-			if ((literal.end()[-1] == 'f'
-				&& std::isdigit(literal.end()[-2]))
-				|| is_pseudo_f) {
-				return (&from_float);
-			}
-			if (std::isdigit(literal.end()[-1]) || is_pseudo_db) {
-				return (&from_double);
-			}
+		if ((literal.end()[-1] == 'f'
+			 && std::isdigit(literal.end()[-2]))
+			|| is_pseudo_f) {
+			return (&from_float);
+		}
+		if (std::isdigit(literal.end()[-1]) || is_pseudo_db) {
+			return (&from_double);
+		}
 	} else if (idx_dot == std::string::npos) {
 		if (literal.length() == 1 && std::iswalpha(literal[0])) {
 			return (&from_char);
@@ -195,9 +203,6 @@ static FuncPtr from_type(std::string const& literal) {
 	}
 	return (&from_invalid);
 }
-// @follow-up handle non print characters
-// @follow-up handle precision
-// @follow-up handle pseudo literals -inff, +inff, +inf, nanf, -inf, nan
 
 void ScalarConverter::convert(std::string const& literal) {
 	if ((literal.length() == 1
