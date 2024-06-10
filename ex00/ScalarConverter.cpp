@@ -147,21 +147,19 @@ static FuncPtr from_type(std::string const& literal) {
 			&& literal != "+inff" && literal != "-inff")) {
 		return (&from_invalid);
 	}
-	const bool is_pseudo_db = is_pseudo_double(literal);
-	const bool is_pseudo_f  = is_pseudo_float(literal);
-	if ((is_pseudo_db || is_pseudo_f)
-		|| (idx_dot != std::string::npos)) {
-		if ((literal.end()[-1] == 'f'
-			 && std::isdigit(literal.end()[-2]))
-			|| is_pseudo_f) {
-			return (&from_float);
-		}
-		if ((idx_dot != std::string::npos
-			 && std::isdigit(literal.end()[-1]))
-			|| is_pseudo_db) {
-			return (&from_double);
-		}
-	} else if (idx_dot == std::string::npos) {
+	if (is_pseudo_float(literal)
+		|| (idx_dot != std::string::npos
+			&& literal.end()[-1] == 'f'
+			&& std::isdigit(literal.end()[-2]))) {
+		return (&from_float);
+	}
+	if (is_pseudo_double(literal)
+		|| (idx_dot != std::string::npos
+			&& std::isdigit(literal.end()[-1])
+			&& std::isdigit(literal.end()[-1]))) {
+		return (&from_double);
+	}
+	if (idx_dot == std::string::npos) {
 		if (literal.length() == 1 && std::iswalpha(literal[0])) {
 			return (&from_char);
 		}
