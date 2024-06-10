@@ -75,7 +75,6 @@ static void print_table(long int_val, float float_val, double double_val, bool i
 	std::cout << "double: " << std::fixed << std::setprecision(1) << double_val << "\n";
 }
 
-// @audit type conversion must be solved using one specific type of casting.
 static void from_char(std::string const& literal) {
 	const char input = static_cast<char>(literal[0]);
 
@@ -108,11 +107,6 @@ void from_invalid(std::string const& literal) {
 	std::cerr << "Invalid input: " << literal << " !\n";
 }
 
-// void from_invalid_early(std::string const& literal) {
-// 	std::cerr << "early input: " << literal << " !\n";
-// }
-
-// @follow-up needs additional checks
 static FuncPtr from_type(std::string const& literal) {
 	const size_t idx_dot = literal.find(".", 1);
 	const size_t idx_f   = literal.find("f");
