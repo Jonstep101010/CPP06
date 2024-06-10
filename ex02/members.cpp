@@ -26,6 +26,8 @@ void identify(Base* p) {
 		std::cout << "B\n";
 	} else if (dynamic_cast<C*>(p)) {
 		std::cout << "C\n";
+	} else {
+		std::cout << "pointer to Base is null\n";
 	}
 }
 
