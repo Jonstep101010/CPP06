@@ -1,5 +1,4 @@
 #include "ScalarConverter.hpp"
-#include <cfloat>
 #include <cstdlib>
 #include <iomanip>
 #include <iostream>
@@ -128,25 +127,38 @@ void from_invalid(std::string const& literal) {
 	std::cerr << "Invalid input: " << literal << " !\n";
 }
 
+// void from_invalid_early(std::string const& literal) {
+// 	std::cerr << "early input: " << literal << " !\n";
+// }
+
 // @follow-up needs additional checks
 static FuncPtr from_type(std::string const& literal) {
-	const size_t idx_dot      = literal.find(".", 1);
-	const bool   is_pseudo_db = is_pseudo_double(literal);
-	const bool   is_pseudo_f  = is_pseudo_float(literal);
-	if (idx_dot != std::string::npos
-		&& static_cast<std::string>(&literal.at(idx_dot))
-				   .find(".", 1)
-			   != std::string::npos) {
+	const size_t idx_dot = literal.find(".", 1);
+	const size_t idx_f   = literal.find("f");
+	if ((idx_dot != std::string::npos
+		 && static_cast<std::string>(&literal.at(idx_dot))
+					.find(".", 1)
+				!= std::string::npos)
+		|| (idx_f != std::string::npos
+			&& idx_f != literal.length() - 1
+			&& static_cast<std::string>(&literal.at(idx_f))
+					   .find("f")
+				   != std::string::npos
+			&& literal != "+inff" && literal != "-inff")) {
 		return (&from_invalid);
 	}
+	const bool is_pseudo_db = is_pseudo_double(literal);
+	const bool is_pseudo_f  = is_pseudo_float(literal);
 	if ((is_pseudo_db || is_pseudo_f)
-		|| idx_dot != std::string::npos) {
+		|| (idx_dot != std::string::npos)) {
 		if ((literal.end()[-1] == 'f'
 			 && std::isdigit(literal.end()[-2]))
 			|| is_pseudo_f) {
 			return (&from_float);
 		}
-		if (std::isdigit(literal.end()[-1]) || is_pseudo_db) {
+		if ((idx_dot != std::string::npos
+			 && std::isdigit(literal.end()[-1]))
+			|| is_pseudo_db) {
 			return (&from_double);
 		}
 	} else if (idx_dot == std::string::npos) {
