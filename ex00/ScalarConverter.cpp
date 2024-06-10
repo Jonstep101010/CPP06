@@ -1,8 +1,10 @@
 #include "ScalarConverter.hpp"
+#include <cfloat>
 #include <cstdlib>
 #include <iomanip>
 #include <iostream>
 #include <limits.h>
+#include <limits>
 
 /*
 ** ------------------------------- CONSTRUCTOR --------------------------------
@@ -58,133 +60,66 @@ static bool contains_chars(std::string const& literal) {
 	return false;
 }
 
+static void print_table(long int_val, float float_val,
+						double double_val,
+						bool   is_pseudo = false) {
+	if (is_pseudo) {
+		std::cout << " pseudo literal\n";
+		std::cout << "char: impossible\nint: impossible\n";
+	} else {
+		if (int_val >= std::numeric_limits<char>::min()
+			&& int_val <= std::numeric_limits<char>::max()) {
+			std::cout << "char: '" << static_cast<char>(int_val)
+					  << "'\n";
+		} else {
+			std::cout << "char: Non displayable\n";
+		}
+		if (int_val <= INT_MAX && int_val >= INT_MIN) {
+			std::cout << "int: " << static_cast<int>(int_val)
+					  << "\n";
+		} else {
+			std::cout << "int: impossible\n";
+		}
+	}
+	std::cout << "float:  " << std::fixed << std::setprecision(1)
+			  << float_val << "f\n";
+	std::cout << "double: " << std::fixed << std::setprecision(1)
+			  << double_val << "\n";
+}
+
 // @audit type conversion must be solved using one specific type of casting.
 static void from_char(std::string const& literal) {
 	const char input = static_cast<char>(literal[0]);
 
-	if (std::isprint(input)) {
-		std::cout << "char: '" << input << "' (source)\n";
-	} else {
-		std::cout << "char: Non displayable\n";
-	}
-
-	std::cout << "int: " << static_cast<int>(input) << "\n";
-	std::cout << "float: " << static_cast<float>(input)
-			  << ".0f\n";
-	std::cout << "double: " << static_cast<double>(input)
-			  << ".0\n";
+	print_table(static_cast<int>(input),
+				static_cast<float>(input),
+				static_cast<double>(input));
 }
 
 static void from_int(std::string const& literal) {
 	const long wrap_input
 		= static_cast<long>(std::atol(literal.c_str()));
 
-	if (wrap_input < INT_MAX && wrap_input > INT_MIN) {
-		const int input = static_cast<int>(wrap_input);
-		if (std::isprint(input)) {
-			std::cout << "char: '" << static_cast<char>(input)
-					  << "'\n";
-		} else {
-			std::cout << "char: Non displayable\n";
-		}
-		std::cout << "int: " << input << " (source)\n";
-		std::cout << "float: " << std::fixed
-				  << std::setprecision(1)
-				  << static_cast<float>(input) << ".0f\n";
-		std::cout << "double: " << std::fixed
-				  << std::setprecision(1)
-				  << static_cast<double>(input) << ".0\n";
-	} else {
-		std::cout << "char: impossible\n";
-		std::cout << "int: impossible\n";
-		std::cout << "float: " << std::fixed
-				  << std::setprecision(1)
-				  << static_cast<float>(wrap_input) << "f\n";
-		std::cout << "double: " << std::fixed
-				  << std::setprecision(1)
-				  << static_cast<double>(wrap_input) << "\n";
-	}
+	print_table(wrap_input, static_cast<float>(wrap_input),
+				static_cast<double>(wrap_input));
 }
 
 static void from_float(std::string const& literal) {
 	const float input
 		= static_cast<float>(std::atof(literal.c_str()));
 
-	if (is_pseudo_float(literal)) {
-		std::cout << "char: impossible\n";
-		std::cout << "int: impossible\n";
-		std::cout << "float: " << std::fixed
-				  << std::setprecision(1) << input
-				  << "f (source)\n";
-		std::cout << "double: " << static_cast<double>(input)
-				  << "\n";
-	} else {
-		const int scalar_int
-			= static_cast<int>(std::atoi(literal.c_str()));
-		const char scalar_char = static_cast<char>(input);
-		if (std::isprint(scalar_char) != 0) {
-			std::cout << "char: '" << scalar_char << "'\n";
-		} else {
-			std::cout << "char: Non displayable\n";
-		}
-
-		std::cout << "int: " << scalar_int << std::endl;
-		if (static_cast<float>(scalar_int) == input) {
-			std::cout << "float: " << std::fixed
-					  << std::setprecision(1) << input
-					  << ".0f (source)\n";
-			std::cout << "double: " << static_cast<double>(input)
-					  << ".0\n";
-		} else {
-			std::cout << "float: " << std::fixed
-					  << std::setprecision(1) << input
-					  << "f (source)\n";
-			std::cout << "double: " << static_cast<double>(input)
-					  << "\n";
-		}
-	}
+	print_table(
+		static_cast<long>(input), static_cast<float>(input),
+		static_cast<double>(input), is_pseudo_float(literal));
 }
 
 static void from_double(std::string const& literal) {
-	const double input
-		= static_cast<double>(std::atof(literal.c_str()));
+	const double input = static_cast<double>(
+		std::strtod(literal.c_str(), NULL));
 
-	if (is_pseudo_double(literal)) {
-		std::cout << "char: impossible\n";
-		std::cout << "int: impossible\n";
-		std::cout << "float: " << std::fixed
-				  << std::setprecision(1)
-				  << static_cast<float>(input) << "f \n";
-		std::cout << "double: " << std::fixed
-				  << std::setprecision(1) << input
-				  << " (source)\n";
-	} else {
-		const int scalar_int
-			= static_cast<int>(std::atoi(literal.c_str()));
-		const char scalar_char = static_cast<char>(input);
-		if (std::isprint(scalar_char)) {
-			std::cout << "char: '" << scalar_char << " '\n";
-		} else {
-			std::cout << "char: Non displayable\n";
-		}
-
-		std::cout << "int: " << scalar_int << "\n";
-		if (static_cast<double>(scalar_int) == input) {
-			std::cout << "float: " << std::fixed
-					  << std::setprecision(1)
-					  << static_cast<float>(input) << ".0f\n";
-			std::cout << "double: " << std::fixed
-					  << std::setprecision(1) << input
-					  << ".0 (source)\n";
-		} else {
-			std::cout << "float: " << std::fixed
-					  << std::setprecision(1)
-					  << static_cast<float>(input) << "f\n";
-			std::cout << "double: " << std::fixed
-					  << std::setprecision(1) << input
-					  << " (source)\n";
-		}
-	}
+	print_table(static_cast<long>(input),
+				static_cast<float>(input), input,
+				is_pseudo_double(literal));
 }
 
 typedef void (*FuncPtr)(std::string const&);
