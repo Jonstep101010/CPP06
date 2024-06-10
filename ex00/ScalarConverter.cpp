@@ -56,11 +56,9 @@ static bool contains_chars(std::string const& literal) {
 
 static void print_table(long int_val, float float_val, double double_val, bool is_pseudo = false) {
 	if (is_pseudo) {
-		std::cout << " pseudo literal\n";
 		std::cout << "char: impossible\nint: impossible\n";
 	} else {
-		if (int_val >= std::numeric_limits<char>::min()
-			&& int_val <= std::numeric_limits<char>::max()) {
+		if (int_val >= 32 && int_val <= 126) {
 			std::cout << "char: '" << static_cast<char>(int_val) << "'\n";
 		} else {
 			std::cout << "char: Non displayable\n";
