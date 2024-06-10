@@ -1,5 +1,6 @@
 #include "ScalarConverter.hpp"
 #include <cstdlib>
+#include <iomanip>
 #include <iostream>
 #include <limits.h>
 
@@ -87,17 +88,21 @@ static void from_int(std::string const& literal) {
 			std::cout << "char: Non displayable\n";
 		}
 		std::cout << "int: " << input << " (source)\n";
-		std::cout << "float: " << static_cast<float>(input)
-				  << ".0f\n";
-		std::cout << "double: " << static_cast<double>(input)
-				  << ".0\n";
+		std::cout << "float: " << std::fixed
+				  << std::setprecision(1)
+				  << static_cast<float>(input) << ".0f\n";
+		std::cout << "double: " << std::fixed
+				  << std::setprecision(1)
+				  << static_cast<double>(input) << ".0\n";
 	} else {
 		std::cout << "char: impossible\n";
 		std::cout << "int: impossible\n";
-		std::cout << "float: " << static_cast<float>(wrap_input)
-				  << ".0f\n";
-		std::cout << "double: "
-				  << static_cast<double>(wrap_input) << ".0\n";
+		std::cout << "float: " << std::fixed
+				  << std::setprecision(1)
+				  << static_cast<float>(wrap_input) << "f\n";
+		std::cout << "double: " << std::fixed
+				  << std::setprecision(1)
+				  << static_cast<double>(wrap_input) << "\n";
 	}
 }
 
@@ -108,7 +113,9 @@ static void from_float(std::string const& literal) {
 	if (is_pseudo_float(literal)) {
 		std::cout << "char: impossible\n";
 		std::cout << "int: impossible\n";
-		std::cout << "float: " << input << "f (source)\n";
+		std::cout << "float: " << std::fixed
+				  << std::setprecision(1) << input
+				  << "f (source)\n";
 		std::cout << "double: " << static_cast<double>(input)
 				  << "\n";
 	} else {
@@ -123,11 +130,15 @@ static void from_float(std::string const& literal) {
 
 		std::cout << "int: " << scalar_int << std::endl;
 		if (static_cast<float>(scalar_int) == input) {
-			std::cout << "float: " << input << ".0f (source)\n";
+			std::cout << "float: " << std::fixed
+					  << std::setprecision(1) << input
+					  << ".0f (source)\n";
 			std::cout << "double: " << static_cast<double>(input)
 					  << ".0\n";
 		} else {
-			std::cout << "float: " << input << "f (source)\n";
+			std::cout << "float: " << std::fixed
+					  << std::setprecision(1) << input
+					  << "f (source)\n";
 			std::cout << "double: " << static_cast<double>(input)
 					  << "\n";
 		}
@@ -141,9 +152,12 @@ static void from_double(std::string const& literal) {
 	if (is_pseudo_double(literal)) {
 		std::cout << "char: impossible\n";
 		std::cout << "int: impossible\n";
-		std::cout << "float: " << static_cast<float>(input)
-				  << "f \n";
-		std::cout << "double: " << input << " (source)\n";
+		std::cout << "float: " << std::fixed
+				  << std::setprecision(1)
+				  << static_cast<float>(input) << "f \n";
+		std::cout << "double: " << std::fixed
+				  << std::setprecision(1) << input
+				  << " (source)\n";
 	} else {
 		const int scalar_int
 			= static_cast<int>(std::atoi(literal.c_str()));
@@ -156,13 +170,19 @@ static void from_double(std::string const& literal) {
 
 		std::cout << "int: " << scalar_int << "\n";
 		if (static_cast<double>(scalar_int) == input) {
-			std::cout << "float: " << static_cast<float>(input)
-					  << ".0f\n";
-			std::cout << "double: " << input << ".0 (source)\n";
+			std::cout << "float: " << std::fixed
+					  << std::setprecision(1)
+					  << static_cast<float>(input) << ".0f\n";
+			std::cout << "double: " << std::fixed
+					  << std::setprecision(1) << input
+					  << ".0 (source)\n";
 		} else {
-			std::cout << "float: " << static_cast<float>(input)
-					  << "f\n";
-			std::cout << "double: " << input << " (source)\n";
+			std::cout << "float: " << std::fixed
+					  << std::setprecision(1)
+					  << static_cast<float>(input) << "f\n";
+			std::cout << "double: " << std::fixed
+					  << std::setprecision(1) << input
+					  << " (source)\n";
 		}
 	}
 }
@@ -173,6 +193,7 @@ void from_invalid(std::string const& literal) {
 	std::cerr << "Invalid input: " << literal << " !\n";
 }
 
+// @follow-up needs additional checks
 static FuncPtr from_type(std::string const& literal) {
 	const size_t idx_dot      = literal.find(".", 1);
 	const bool   is_pseudo_db = is_pseudo_double(literal);
